@@ -27,6 +27,8 @@ public class SimpleHttp: NSObject {
     var auth : BasicAuth?
     var headers: [String: String] = [String: String]()
     
+    public static var logger: (( _ request: URLRequest?, _ response: URLResponse?, _ message: String?, _ data: Data?, _ dataString: String?, _ error: Error? ) -> Void)?
+    
     init(auth: BasicAuth?){
         self.auth = auth
         super.init()
@@ -59,6 +61,7 @@ public class SimpleHttp: NSObject {
         let task = session.dataTask(with: request, completionHandler: { data, response, error in
             if let error = error {
                 print("Error while trying to re-authenticate the user: \(error)")
+                SimpleHttp.logger?(request, nil, "Error while trying to re-authenticate the user", data, nil, error)
                 errorBlock(.serviceError(error)) //Error
             } else if let response = response as? HTTPURLResponse,
                 300..<600 ~= response.statusCode {
@@ -66,10 +69,13 @@ public class SimpleHttp: NSObject {
                 if let data {
                     dataString = String(data: data, encoding: .utf8) ?? ""
                 }
+                SimpleHttp.logger?(request, response, "HTTP status code \(response.statusCode)", data, dataString, error)
                 errorBlock(.statusCode(response.statusCode, dataString)) //Error
             } else if let data = data {
+                SimpleHttp.logger?(request, response, "Success", data, nil, error)
                 completionBlock(data) //Success
             } else {
+                SimpleHttp.logger?(request, response, "No Data", data, nil, error)
                 errorBlock(.noData) //Error
             }
         })
