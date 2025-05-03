@@ -94,7 +94,7 @@ public struct AnyAPIDefinition<In: Codable, Out: Codable>: APIDefinition {
 }
 
 extension RestClient {
-    
+    @available(macOS 10.15, *)
     public func performAPIOperation<T: APIDefinition>(input: T.In, apiDef: T) async throws -> T.Out {
         if #available(macOS 14, *) {
             return try await withCheckedThrowingContinuation { continuation in
